@@ -1,0 +1,9 @@
+name: total_revenue
+label: Total revenue
+type: simple
+entity: orders
+expression: SUM(o_totalprice)
+dimensions_allowed:
+  - order_status
+  - order_date
+  - customer_segment

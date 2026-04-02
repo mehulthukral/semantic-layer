@@ -1,0 +1,32 @@
+entity: orders
+table: orders
+primary_key: o_orderkey
+
+joins:
+  - entity: customer
+    join_key: o_custkey
+    foreign_key: c_custkey
+    type: left
+
+dimensions:
+  - name: order_status
+    column: o_orderstatus
+    type: string
+  - name: order_date
+    column: o_orderdate
+    type: date
+  - name: order_priority
+    column: o_order_priority
+    type: string
+  - name: clerk
+    column: o_clerk
+    type: string
+  - name: ship_priority
+    column: o_shippriority
+    type: integer
+  - name: customer_segment
+    column: c_mktsegment
+    entity: customer
+    type: string
+
+  

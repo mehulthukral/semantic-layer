@@ -1,0 +1,9 @@
+name: order_count
+label: Order count
+type: simple
+entity: orders
+expression: COUNT(o_orderkey)
+dimensions_allowed:
+  - order_status
+  - order_date
+  - customer_segment

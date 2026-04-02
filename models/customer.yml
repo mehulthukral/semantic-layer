@@ -1,0 +1,8 @@
+entity: customer
+table: customer
+primary_key: c_custkey
+
+dimensions:
+  - name: customer_segment
+    column: c_mktsegment
+    type: string
