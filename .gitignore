@@ -8,3 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+tpch.duckdb
+TPC-H Dataset
