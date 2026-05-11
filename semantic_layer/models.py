@@ -16,12 +16,20 @@ class Dimension:
     entity: Optional[str] = None  # None = lives on base table
 
 @dataclass
+class Filter:
+    name: str
+    column: str
+    type: str
+    entity: Optional[str] = None
+
+@dataclass
 class Entity:
     entity: str
     table: str
     primary_key: str
     dimensions: list[Dimension] = field(default_factory=list)
     joins: list[Join] = field(default_factory=list)
+    filters: list[Filter] = field(default_factory=list)
 
 @dataclass
 class Metric:

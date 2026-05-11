@@ -29,4 +29,16 @@ dimensions:
     entity: customer
     type: string
 
+filters:
+  - name: order_status
+    column: o_orderstatus
+    type: string
+  - name: order_date
+    column: o_orderdate
+    type: date
+  - name: customer_segment
+    column: c_mktsegment
+    type: string
+    entity: customer
+
   

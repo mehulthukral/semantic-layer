@@ -1,6 +1,12 @@
 from .catalog import Catalog
 
-def query(metric: str, dimensions: list[str], catalog: Catalog) -> str:
+def query(  metric: str,
+            dimensions: list[str],
+            catalog: Catalog,
+            filters: list[dict] | None = None,
+            order_by: str | None = None,
+            order_dir: str = "desc",
+            limit: int | None = None,) -> str:
     # 1. look up the metric
     m = catalog.metrics.get(metric)
     if not m:
@@ -50,11 +56,35 @@ def query(metric: str, dimensions: list[str], catalog: Catalog) -> str:
     # 5. add the metric expression
     select_cols.append(f"{m.expression} AS {m.name}")
 
-    # 6. assemble SQL
+    # 6. pre-process filters to collect any additional joins needed
+    where_clauses = []
+    if filters:
+        filter_lookup = {f.name: f for f in entity.filters}
+        for f in filters:
+            field = filter_lookup.get(f["field"])
+            if not field:
+                raise ValueError(f"Unknown filter field: '{f['field']}'")
+            if field.entity:
+                filter_entity = catalog.entities.get(field.entity)
+                if not filter_entity:
+                    raise ValueError(f"Unknown filter entity: '{field.entity}'")
+                col = f"{filter_entity.table}.{field.column}"
+                joins_needed[field.entity] = join_lookup[field.entity]
+            else:
+                col = f"{entity.table}.{field.column}"
+            value = f["value"]
+            if field.type == "string":
+                where_clauses.append(f"{col} = '{value}'")
+            elif field.type == "date":
+                where_clauses.append(f"{col} = '{value}'")
+            else:
+                where_clauses.append(f"{col} = {value}")
+
+    # 7. assemble SQL
     select_clause = ",\n  ".join(select_cols)
     sql = f"SELECT\n  {select_clause}\nFROM {entity.table}"
 
-    # 7. add joins
+    # 8. add joins (now includes any joins required by filters)
     for join in joins_needed.values():
         joined_entity = catalog.entities[join.entity]
         sql += (
@@ -63,8 +93,19 @@ def query(metric: str, dimensions: list[str], catalog: Catalog) -> str:
             f" = {joined_entity.table}.{join.foreign_key}"
         )
 
+    if where_clauses:
+        sql += f"\nWHERE {' AND '.join(where_clauses)}"
+
     # 8. add group by
     if group_cols:
         sql += f"\nGROUP BY {', '.join(group_cols)}"
+
+    if order_by:
+        direction = (order_dir or "desc").upper()
+        sql += f"\nORDER BY {order_by} {direction}"
+
+    # add LIMIT
+    if limit:
+        sql += f"\nLIMIT {limit}"
 
     return sql

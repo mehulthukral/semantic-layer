@@ -1,6 +1,6 @@
 import yaml
 from pathlib import Path
-from .models import Metric, Entity, Dimension, Join
+from .models import Filter, Metric, Entity, Dimension, Join
 
 class Catalog:
     def __init__(self, metrics_dir: str, models_dir: str):
@@ -13,14 +13,18 @@ class Catalog:
     def _load_entities(self, path: str):
         for f in Path(path).glob("*.yml"):
             raw = yaml.safe_load(f.read_text())
+            if raw is None:
+                continue
             dims = [Dimension(**d) for d in raw.get("dimensions", [])]
             joins = [Join(**j) for j in raw.get("joins", [])]
+            filters = [Filter(**f) for f in raw.get("filters", [])]
             entity = Entity(
                 entity=raw["entity"],
                 table=raw["table"],
                 primary_key=raw["primary_key"],
                 dimensions=dims,
                 joins=joins,
+                filters=filters,
             )
             self.entities[entity.entity] = entity
 

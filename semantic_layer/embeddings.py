@@ -56,13 +56,25 @@ def build_dimension_chunks(catalog: Catalog) -> list[dict]:
             })
     return chunks 
 
+def build_filter_chunks(catalog: Catalog) -> list[dict]:
+    chunks = []
+    for entity in catalog.entities.values():
+        for f in entity.filters:
+            text = (
+                f"Filter name: {f.name}. "
+                f"Use field='{f.name}' to filter on {f.column} ({f.type}) "
+                f"on the {entity.entity} table."
+            )
+            chunks.append({"id": f"filter__{entity.entity}__{f.name}", "text": text})
+    return chunks
+
 def build_vector_store(catalog: Catalog) -> chromadb.Collection:
 
     """
     This function embeds everything and loads it into a ChromaDB
 
-    This is the setup step you only run once. It takes all your metric and dimension chunks and embeds 
-    them all, and stores them in a ChromaDB collection called "semantic_layer". After this, ChromaDB holds 
+    This is the setup step you only run once. It takes all your metric and dimension chunks and embeds
+    them all, and stores them in a ChromaDB collection called "semantic_layer". After this, ChromaDB holds
     both the original text and its vector for every metric and dimension that have been defined.
     """
 
@@ -71,7 +83,8 @@ def build_vector_store(catalog: Catalog) -> chromadb.Collection:
 
     metric_chunks = build_metric_chunks(catalog)
     dim_chunks = build_dimension_chunks(catalog)
-    all_chunks = metric_chunks + dim_chunks
+    filter_chunks = build_filter_chunks(catalog)
+    all_chunks = metric_chunks + dim_chunks + filter_chunks
 
     texts = [c["text"] for c in all_chunks]
     ids = [c["id"] for c in all_chunks]
